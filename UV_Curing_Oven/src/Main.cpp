@@ -3,7 +3,7 @@
 #include "OLED.h"
 #include "PWM.h"
 
-int counter = 0;
+extern int KnobCounter;
 unsigned long UV_OnTime = 0;
 int menu_state = 0;
 int selected_time = 0;
@@ -17,49 +17,56 @@ struct Selected_Settings {
 Selected_Settings settings;
 
 void setup() {
-  pinMode(UVLED, OUTPUT);
-  digitalWrite(UVLED, LOW);
-  init_knob();
+  pinMode(UVLED_SW_PIN, OUTPUT);
+  digitalWrite(UVLED_SW_PIN, LOW);
+  KNOB_Init();
   init_OLED();  
   init_PWM();
   Serial.begin(9600);
   
 }
 
-void loop() {
-  if(poll_button()){
-    switch(menu_state) {
+void loop() 
+{
+  if(KNOB_PollButtonRelease() == true)
+  {
+    switch(menu_state) 
+    {
     case 0:
-      if (counter == 0) {
-        digitalWrite(UVLED, HIGH);
+      if (KnobCounter == 0) {
+        digitalWrite(UVLED_SW_PIN, HIGH);
         UV_OnTime = millis();
-      } else if (counter == 1) {
-        digitalWrite(UVLED, LOW);
+      } else if (KnobCounter == 1) 
+      {
+        digitalWrite(UVLED_SW_PIN, LOW);
         UV_OnTime = 0;
-      } else if (counter == 2) {
+      } else if (KnobCounter == 2) 
+      {
         menu_state = 1;
-        counter = settings.on_time;
-      } else if (counter == 3) {
+        KnobCounter = settings.on_time;
+      } else if (KnobCounter == 3) 
+      {
         menu_state = 2;
-        counter = settings.brightness;
+        KnobCounter = settings.brightness;
       }
       break;
     case 1:
       menu_state = 0;
-      settings.on_time = counter;
-      counter = 0;
+      settings.on_time = KnobCounter;
+      KnobCounter = 0;
       break;
     case 2:
       menu_state = 0;
-      settings.brightness = counter;
-      counter = 0;
+      settings.brightness = KnobCounter;
+      KnobCounter = 0;
       break;
     }
 
   }
   
-  if((millis() - UV_OnTime > 1000UL*settings.on_time)&&UV_OnTime != 0){
-    digitalWrite(UVLED, LOW);
+  if((millis() - UV_OnTime > 1000UL*settings.on_time)&&UV_OnTime != 0)
+  {
+    digitalWrite(UVLED_SW_PIN, LOW);
     UV_OnTime = 0;
   }
 

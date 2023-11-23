@@ -1,14 +1,18 @@
+/***************************************************
+ *  Header file for Knob C file
+ *
+ ***************************************************
+ */
+
 #ifndef KNOB_H // include guard
 #define KNOB_H
 
-#define Key 16 //Push switch Active Low
-#define S1 15 //ACW rotation first low
-#define S2 14 //ACW rotation second low
-#define CW_rot 1
+#define BUTTON_PRESSED (LOW)
+#define BUTTON_RELEASED (HIGH)
 
-void init_knob();
-void updateEncoder();
-bool poll_button();
+
+void KNOB_Init(void);
+bool KNOB_PollButtonRelease(void);
 
 
 

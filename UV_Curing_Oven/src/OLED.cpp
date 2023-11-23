@@ -4,7 +4,7 @@
 #include <U8g2lib.h>
 
 static unsigned long last_update = 0;
-extern int counter;
+extern int KnobCounter;
 extern char message[];
 /* OLED Constructor */
 U8G2_SH1106_128X64_NONAME_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 13, /* data=*/ 11, /* cs=*/ 10, /* dc=*/ 9, /* reset=*/ 8);
@@ -38,12 +38,12 @@ void init_OLED() {
 
 Page_details get_selection(Page_details menu) {
   int select = 0;
-  if (counter <= first_index){ 
+  if (KnobCounter <= first_index){ 
     select = 0;
-  } else if (counter >= menu.options_tot-1){
+  } else if (KnobCounter >= menu.options_tot-1){
     select = menu.options_os-1;
   } else {
-    select = counter-first_index;
+    select = KnobCounter-first_index;
   }
   for(int i = 0; i < menu.options_os; i++){
     if (i == select) {
@@ -55,11 +55,11 @@ Page_details get_selection(Page_details menu) {
   return menu;
 }
 
-void set_counter_range(int low, int high){
-  if (counter <= low){ 
-    counter = low;
-  } else if (counter >= high){
-    counter = high;
+void set_KnobCounter_range(int low, int high){
+  if (KnobCounter <= low){ 
+    KnobCounter = low;
+  } else if (KnobCounter >= high){
+    KnobCounter = high;
   }
 }
 
@@ -76,9 +76,9 @@ void set_status_message(){
 }
 
 void set_first_index(int screen, int options){
-  if(counter < first_index && first_index>0){
+  if(KnobCounter < first_index && first_index>0){
     first_index--;
-  } else if(counter >= screen+first_index && (first_index+screen)<(options)){
+  } else if(KnobCounter >= screen+first_index && (first_index+screen)<(options)){
     first_index++;
   }
 } 
@@ -91,22 +91,22 @@ void update_OLED(int menu_state) {
     Page_details menu;
     menu.options_os = 0;
     menu.options_tot = 0;
-    char char_counter[5];
+    char char_KnobCounter[5];
 
     switch(menu_state) {
       case 0:
         menu.options_os = 3;
         menu.options_tot = 6;
         set_first_index(menu.options_os, menu.options_tot);
-        set_counter_range(0,menu.options_tot-1);
+        set_KnobCounter_range(0,menu.options_tot-1);
         menu = get_selection(menu);
       case 1:
         menu.options_os = 0;
         menu.options_tot = 0;
-        set_counter_range(0,MAX_ON_TIME_S);
+        set_KnobCounter_range(0,MAX_ON_TIME_S);
     }
     
-    sprintf(char_counter, "%d", counter);
+    sprintf(char_KnobCounter, "%d", KnobCounter);
     
     
     switch(menu_state) {
@@ -133,8 +133,8 @@ void update_OLED(int menu_state) {
       u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth("Exposure Time"))/2),15,"Exposure Time");
       u8g2.drawBox(0,16,u8g2.getDisplayWidth(), 2);
       
-      //Time counter
-      u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth(char_counter))/2),40,char_counter);
+      //Time KnobCounter
+      u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth(char_KnobCounter))/2),40,char_KnobCounter);
 
       u8g2.drawButtonUTF8((u8g2.getDisplayWidth()-u8g2.getStrWidth("OK"))/2, 60, U8G2_BTN_INV, 25,  25,  1, "OK" );
       } while ( u8g2.nextPage() );
@@ -147,8 +147,8 @@ void update_OLED(int menu_state) {
       u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth("UV Brightness"))/2),15,"UV Brightness");
       u8g2.drawBox(0,16,u8g2.getDisplayWidth(), 2);
       
-      //Time counter
-      u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth(char_counter))/2),40,char_counter);
+      //Time KnobCounter
+      u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth(char_KnobCounter))/2),40,char_KnobCounter);
 
       u8g2.drawButtonUTF8((u8g2.getDisplayWidth()-u8g2.getStrWidth("OK"))/2, 60, U8G2_BTN_INV, 25,  25,  1, "OK" );
       } while ( u8g2.nextPage() );
