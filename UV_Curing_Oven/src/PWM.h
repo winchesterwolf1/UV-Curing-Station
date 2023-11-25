@@ -9,6 +9,10 @@
 
 #include "Definitions.h"
 
+/*Exported Defines**********************************/
+/*Exported Macros***********************************/
+/*Exported Typedefs*********************************/
+/*Exported Function Prototypes**********************/
 
 void PWM_Init(void);
 void PWM_Update(uint8_t pin, uint8_t duty);

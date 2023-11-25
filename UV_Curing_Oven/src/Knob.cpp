@@ -7,9 +7,16 @@
 #include "Knob.h"
 #include "Definitions.h"
 
+
+/*Private Defines************************************/
+
 #define COUNTER_MAX 100
 #define COUNTER_MIN 0
 
+
+/*Private Macros*************************************/
+/*Private Typedef************************************/
+/*Global Variables***********************************/
 
 CounterRange_t CounterRange = {COUNTER_MIN, COUNTER_MAX};
 volatile int KnobCounter = 0; 
@@ -17,13 +24,14 @@ volatile int currentStateKNOB_S1_PIN;
 volatile int lastStateKNOB_S1_PIN;
 bool save_key_state = BUTTON_RELEASED;
 
+
 /*Private Function Prototypes************************/
 
 bool DebounceButton(bool old_state, uint8_t pin);
 void UpdateEncoderCallback(void);
 
 
-/*IRQ Callback Functions*****************************/
+/*Callback Functions*****************************/
 
 ISR (PCINT1_vect)
 {
@@ -54,7 +62,6 @@ void UpdateEncoderCallback(void)
 	// Remember last CLK state
 	lastStateKNOB_S1_PIN = currentStateKNOB_S1_PIN;
 }
-
 
 
 /*Exported Functions*********************************/

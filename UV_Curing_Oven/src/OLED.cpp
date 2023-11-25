@@ -25,6 +25,10 @@ U8G2_SH1106_128X64_NONAME_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 13, /* data=*/ 1
 extern int KnobCounter;
 
 /*Private Function Prototypes****************************/
+
+void DrawScrollMenuPage(ScrollMenuPageHandle_t* hpage, int num_items);
+void DrawDecimalVariablePage(DecimalSettingPageHandle_t* hpage);
+
 void SetFirstIndex(uint8_t* findex, int num_items, int count);
 void UpdateSelection(int* selected, uint8_t num_items, uint8_t findex, int count);
 
@@ -40,80 +44,102 @@ void OLED_Init()
   u8g2.setFlipMode(1);
 }
 
+/**
+ * @brief Update the OLED with the current menu state. Reads menu
+ * handle and chooses which type of page to draw, and uses the 
+ * strings configured in hmenu to draw buttons and headers
+ * 
+ * @param hmenu Menu Handle
+*/
 void OLED_Update(MenuHandle_t* hmenu) 
 {
-  if (TimeElapsed_ms(&OLED_UpdateTimeout) > 100)
+  //get information of the current page 
+  void* pagehandle_ptr = hmenu->page[hmenu->p_index].pagehandle;
+  PageType_t pagetype = hmenu->page[hmenu->p_index].pagetype;
+  CounterRange_t cRange = hmenu->page[hmenu->p_index].range;
+
+  //choose which page to draw based on page type
+  switch(pagetype) 
   {
-    UpdateTime(&OLED_UpdateTimeout);
-    
-
-    void* pagehandle_ptr = hmenu->page[hmenu->state].pagehandle;
-    PageType_t pagetype = hmenu->page[hmenu->state].pagetype;
-    CounterRange_t cRange = hmenu->page[hmenu->state].range;
-
-    switch(pagetype) 
-    {
-    case PT_MENU_SCROLL:
-      ScrollMenuPageHandle_t* hmenu_scroll;
-      hmenu_scroll = (ScrollMenuPageHandle_t*)pagehandle_ptr;
-      static uint8_t firstIndex = 0; 
-      int selected[MAX_BUTTONS_ON_SCREEN];
-
-      SetFirstIndex(&firstIndex, cRange.high+1, KnobCounter);
-      UpdateSelection(selected, cRange.high+1, firstIndex, KnobCounter);
-
-
-      u8g2.firstPage();
-      do {
-        //Heading
-        u8g2.setFont(u8g2_font_courR10_tf);
-        u8g2.drawStr(0,15,hmenu_scroll->header);
-        u8g2.drawBox(0,16,u8g2.getDisplayWidth(), 2);
-
-        //Menu Options
-        u8g2.setFont(u8g2_font_courR10_tf);
-        u8g2.drawButtonUTF8(5, 28, selected[0], u8g2.getDisplayWidth()-5*2,  5,  1, hmenu_scroll->itemlist[firstIndex].name );
-        u8g2.drawButtonUTF8(5, 43, selected[1], u8g2.getDisplayWidth()-5*2,  5,  1, hmenu_scroll->itemlist[firstIndex+1].name );
-        u8g2.drawButtonUTF8(5, 58, selected[2], u8g2.getDisplayWidth()-5*2,  5,  1, hmenu_scroll->itemlist[firstIndex+2].name );
-      } while ( u8g2.nextPage() );
-
-      break;
-
-
-    case PT_SETTING_DECIMAL_RANGE_ADJUST:
-      DecimalSettingPageHandle_t* hopt_dec;
-      hopt_dec = (DecimalSettingPageHandle_t*)pagehandle_ptr;
-      sprintf(KnobCounter_str, "%d%s", KnobCounter, hopt_dec->unittxt);
-
-
-      u8g2.firstPage();
-      do {
-      //Heading
-      u8g2.setFont(u8g2_font_courR10_tf);
-      u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth(hopt_dec->header))/2),15,hopt_dec->header);
-      u8g2.drawBox(0,16,u8g2.getDisplayWidth(), 2);
-      
-      //Time KnobCounter
-      u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth(KnobCounter_str))/2),40,KnobCounter_str);
-
-      u8g2.drawButtonUTF8((u8g2.getDisplayWidth()-u8g2.getStrWidth(hopt_dec->buttontxt))/2, 60, U8G2_BTN_INV, 25,  25,  1, hopt_dec->buttontxt );
-      } while ( u8g2.nextPage() );
-      
-      break;
-
-
-    case PT_RUNTIME_STATS:
-    case PT_SETTING_OPTION_SELECT:
-    default:
-      //intentional Fallthrough. Not Implemented
-      break;
-    }
-  }  
+  case PT_MENU_SCROLL:
+    DrawScrollMenuPage((ScrollMenuPageHandle_t*)pagehandle_ptr, cRange.high+1);
+    break;
+  case PT_SETTING_DECIMAL_RANGE_ADJUST:
+    DrawDecimalVariablePage((DecimalSettingPageHandle_t*)pagehandle_ptr);
+    break;
+  case PT_RUNTIME_STATS:
+  case PT_SETTING_OPTION_SELECT:
+  default:
+    //intentional Fallthrough. Not yet Implemented TODO:IMPLEMENT
+    break;
+  }
 }
 
 /*Private Functions*****************************************************/
 
-void UpdateSelection(int* selected, uint8_t num_items, uint8_t findex, int count) 
+/**
+ * @brief Draw the current scroll menu page. 
+ * 
+ * @param hpage Pointer to page handle
+ * @param num_items Number of items in the scroll menu
+*/
+void DrawScrollMenuPage(ScrollMenuPageHandle_t* hpage, int num_items)
+{
+  static uint8_t firstIndex = 0; 
+  int selected[MAX_BUTTONS_ON_SCREEN];
+
+  SetFirstIndex(&firstIndex, num_items, KnobCounter);
+  UpdateSelection(selected, num_items, firstIndex, KnobCounter);
+
+
+  u8g2.firstPage();
+  do {
+    //Heading
+    u8g2.setFont(u8g2_font_courR10_tf);
+    u8g2.drawStr(0,15,hpage->header);
+    u8g2.drawBox(0,16,u8g2.getDisplayWidth(), 2);
+
+    //Menu Options
+    u8g2.setFont(u8g2_font_courR10_tf);
+    u8g2.drawButtonUTF8(5, 28, selected[0], u8g2.getDisplayWidth()-5*2,  5,  1, hpage->itemlist[firstIndex].name );
+    u8g2.drawButtonUTF8(5, 43, selected[1], u8g2.getDisplayWidth()-5*2,  5,  1, hpage->itemlist[firstIndex+1].name );
+    u8g2.drawButtonUTF8(5, 58, selected[2], u8g2.getDisplayWidth()-5*2,  5,  1, hpage->itemlist[firstIndex+2].name );
+  } while ( u8g2.nextPage() );
+}
+
+/**
+ * @brief Draw the current decimal variable menu page. 
+ * 
+ * @param hpage Pointer to page handle
+*/
+void DrawDecimalVariablePage(DecimalSettingPageHandle_t* hpage)
+{
+  sprintf(KnobCounter_str, "%d%s", KnobCounter, hpage->unittxt);
+
+  u8g2.firstPage();
+  do {
+  //Heading
+  u8g2.setFont(u8g2_font_courR10_tf);
+  u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth(hpage->header))/2),15,hpage->header);
+  u8g2.drawBox(0,16,u8g2.getDisplayWidth(), 2);
+
+  //Time KnobCounter
+  u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth(KnobCounter_str))/2),40,KnobCounter_str);
+
+  u8g2.drawButtonUTF8((u8g2.getDisplayWidth()-u8g2.getStrWidth(hpage->buttontxt))/2, 60, U8G2_BTN_INV, 25,  25,  1, hpage->buttontxt );
+  } while ( u8g2.nextPage() );
+}
+
+/**
+ * @brief Update the button drawing array so that the correct button is 
+ * drawn to be highlighted based on the count.
+ * 
+ * @param btntype_arr Array of button drawing types
+ * @param num_items Number of items in the scrolling array
+ * @param findex The index of the top item to be drawn on the screen
+ * @param count Current digital encoder knob count
+*/
+void UpdateSelection(int* btntype_arr, uint8_t num_items, uint8_t findex, int count) 
 {
   int select = 0;
   if (count <= findex){ 
@@ -125,13 +151,20 @@ void UpdateSelection(int* selected, uint8_t num_items, uint8_t findex, int count
   }
   for(int i = 0; i < MAX_BUTTONS_ON_SCREEN; i++){
     if (i == select) {
-      selected[i] = U8G2_BTN_INV;
+      btntype_arr[i] = U8G2_BTN_INV;
     } else {
-      selected[i] = U8G2_BTN_BW1;
+      btntype_arr[i] = U8G2_BTN_BW1;
     }
   }
 }
 
+/**
+ * @brief Sets the index of the top item to draw on the screen on a scrolling page
+ * 
+ * @param findex Pointer to the variable used to store the index of the top item
+ * @param num_items Number of items in the list of items in menu
+ * @param count current digital encoder knob count
+*/
 void SetFirstIndex(uint8_t* findex, int num_items, int count)
 {
   do
