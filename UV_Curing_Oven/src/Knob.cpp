@@ -10,12 +10,6 @@
 #define COUNTER_MAX 100
 #define COUNTER_MIN 0
 
-typedef struct 
-{
-  int low;
-  int high;
-}CounterRange_t;
-
 
 CounterRange_t CounterRange = {COUNTER_MIN, COUNTER_MAX};
 volatile int KnobCounter = 0; 
@@ -110,22 +104,20 @@ bool KNOB_PollButtonRelease(void)
  * @param low The low value of the valid range
  * @param high The high value of the valid range
 */
-void KNOB_SetCounterRange(int low, int high)
+void KNOB_SetCounterRange(CounterRange_t range)
 {
   //check inputs are a valid range
-  if(low < COUNTER_MIN) low = COUNTER_MIN;
-  if(high > COUNTER_MAX) high = COUNTER_MAX;
+  if(range.low < COUNTER_MIN) range.low = COUNTER_MIN;
+  if(range.high > COUNTER_MAX) range.high = COUNTER_MAX;
 
   //set counterRange limits before changing KnobCounter
   //so that knob counter does not get changed be to an invalid
   //value between these two steps
-  CounterRange.low = low;
-  CounterRange.high = high;
-
-  if (KnobCounter <= low){ 
-    KnobCounter = low;
-  } else if (KnobCounter >= high){
-    KnobCounter = high;
+  CounterRange = range;
+  if (KnobCounter <= CounterRange.low){ 
+    KnobCounter = CounterRange.low;
+  } else if (KnobCounter >= CounterRange.high){
+    KnobCounter = CounterRange.high;
   }
 }
 

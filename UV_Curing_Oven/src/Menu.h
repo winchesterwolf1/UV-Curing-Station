@@ -8,6 +8,7 @@
 #define _MENU_H
 
 #include "Definitions.h"
+#include "Knob.h"
 
 #define STATUS_MESSAGE_SIZE MAX_BUTTON_CHAR
 #define NUM_MENUS 4
@@ -32,60 +33,75 @@ typedef struct
 {
     char* name;
     MenuState_t destination;
-}ScrollMenuItem_t;
+    void (*callback)(int arg);
+}ScrollMenuItemHandle_t;
 
 typedef struct 
 {
     char* header;
-    int num_items;
-    ScrollMenuItem_t* itemlist;
-}ScrollMenuHandle_t;
+    ScrollMenuItemHandle_t* itemlist;
+}ScrollMenuPageHandle_t;
 
 /* Setting Decimal Page Structures */
 typedef struct 
 {
     char* header;
-    int rangemin;
-    int rangemax;
     char* unittxt;
     char* buttontxt;
-}SettingDecimalHandle_t;
+    MenuState_t destination;
+    void (*callback)(int arg);
+}DecimalSettingPageHandle_t;
 
 /* Setting Option Page Structures */
 typedef struct 
 {
     char* name;
     int val;
-}SettingOptionItem_t;
+}OptionSettingItemHandle_t;
 
 typedef struct 
 {
     char* header;
-    SettingOptionItem_t* itemlist;
-}SettingOptionHandle_t;
+    OptionSettingItemHandle_t* itemlist;
+    MenuState_t destination;
+    void (*callback)(int arg);
+}OptionSettingPageHandle_t;
 
 /* Runtime Screen Structures */
+
+typedef struct 
+{
+    char* header;
+    MenuState_t destination;
+    void (*callback)(int arg);
+}RuntimePageHandle_t;
 
 /* Menu Structure Item Strtucture */
 typedef struct 
 {
     PageType_t pagetype;
     void* pagehandle;
-}MenuHandleItems_t;
+    CounterRange_t range;
+} MenuPageListHandle_t;
 
 typedef struct
 {
     MenuState_t state;
-    MenuHandleItems_t* page;
+    MenuPageListHandle_t* page;
 }MenuHandle_t;
 
 
-enum MainMenu_Items{
-    MAIN_UV_ON,
-    MAIN_SET_TIME,
-    MAIN_MOTOR_SPEED
-};
+/*Menu Callback Function prototypes*/
+void MENU_Main_UVOnCallback(int arg);
+void MENU_Main_SetTimeCallback(int arg);
+void MENU_Main_SetMotorCallback(int arg);
+void MENU_SetTime_OKCallback(int arg);
+void MENU_SetMotor_OKCallback(int arg);
+void MENU_Runtime_OKCallback(int arg);
 
+/*Exported Menu Functon prototypes*/
 void MENU_SetMainStatusMessage(MenuHandle_t* hmenu);
+void MENU_ServiceSelected(MenuHandle_t* hmenu, int sel_counter);
+void MENU_Init(MenuHandle_t* hmenu);
 
 #endif /*_MENU_H*/

@@ -10,10 +10,15 @@
 #define BUTTON_PRESSED (LOW)
 #define BUTTON_RELEASED (HIGH)
 
+typedef struct 
+{
+  int low;
+  int high;
+}CounterRange_t;
 
 void KNOB_Init(void);
 bool KNOB_PollButtonRelease(void);
-void KNOB_SetCounterRange(int low, int high);
+void KNOB_SetCounterRange(CounterRange_t range);
 
 
 

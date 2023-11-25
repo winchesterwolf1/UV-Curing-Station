@@ -49,17 +49,18 @@ void OLED_Update(MenuHandle_t* hmenu)
 
     void* pagehandle_ptr = hmenu->page[hmenu->state].pagehandle;
     PageType_t pagetype = hmenu->page[hmenu->state].pagetype;
+    CounterRange_t cRange = hmenu->page[hmenu->state].range;
 
     switch(pagetype) 
     {
     case PT_MENU_SCROLL:
-      ScrollMenuHandle_t* hmenu_scroll;
-      hmenu_scroll = (ScrollMenuHandle_t*)pagehandle_ptr;
+      ScrollMenuPageHandle_t* hmenu_scroll;
+      hmenu_scroll = (ScrollMenuPageHandle_t*)pagehandle_ptr;
       static uint8_t firstIndex = 0; 
       int selected[MAX_BUTTONS_ON_SCREEN];
 
-      SetFirstIndex(&firstIndex, hmenu_scroll->num_items, KnobCounter);
-      UpdateSelection(selected, hmenu_scroll->num_items, firstIndex, KnobCounter);
+      SetFirstIndex(&firstIndex, cRange.high+1, KnobCounter);
+      UpdateSelection(selected, cRange.high+1, firstIndex, KnobCounter);
 
 
       u8g2.firstPage();
@@ -80,8 +81,8 @@ void OLED_Update(MenuHandle_t* hmenu)
 
 
     case PT_SETTING_DECIMAL_RANGE_ADJUST:
-      SettingDecimalHandle_t* hopt_dec;
-      hopt_dec = (SettingDecimalHandle_t*)pagehandle_ptr;
+      DecimalSettingPageHandle_t* hopt_dec;
+      hopt_dec = (DecimalSettingPageHandle_t*)pagehandle_ptr;
       sprintf(KnobCounter_str, "%d%s", KnobCounter, hopt_dec->unittxt);
 
 
@@ -137,11 +138,11 @@ void SetFirstIndex(uint8_t* findex, int num_items, int count)
   {
     if(count < *findex && *findex>0)
     {
-      *findex--;
+      *findex = *findex - 1;
     } 
     else if((count > (MAX_BUTTONS_ON_SCREEN-1 + *findex)) && ((*findex + MAX_BUTTONS_ON_SCREEN)<(num_items)))
     {
-      *findex++;
+      *findex = *findex + 1;
     }
   } while ((count > (MAX_BUTTONS_ON_SCREEN-1 + *findex)) || (count < *findex));
   
