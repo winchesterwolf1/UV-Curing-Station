@@ -1,158 +1,148 @@
+/***************************************************
+ *  C Implementation of OLED Screen Menu for the
+ *  UV Curing Oven
+ *
+ ***************************************************
+ */
+
 #include "OLED.h"
 #include "Definitions.h"
+#include "Knob.h"
+#include "Timing.h"
 #include <SPI.h>
 #include <U8g2lib.h>
 
-static unsigned long last_update = 0;
-extern int KnobCounter;
-extern char message[];
+/*Private Defines*******************************************/
+
+/*Private Typedef*******************************************/
+
+/*Global Variables******************************************/
+char KnobCounter_str[10];
+TimerTime_t OLED_UpdateTimeout = 0;
 /* OLED Constructor */
 U8G2_SH1106_128X64_NONAME_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 13, /* data=*/ 11, /* cs=*/ 10, /* dc=*/ 9, /* reset=*/ 8);
-int menu_selected[MAX_MENU_SIZE];
 
-char status_message[14] = "UV LED OFF";
-char LED_ON[14] = "UV LED ON!";
-char LED_OFF[14] = "UV LED OFF";
-int first_index = 0;
+extern int KnobCounter;
+
+/*Private Function Prototypes****************************/
+void SetFirstIndex(uint8_t* findex, int num_items, int count);
+void UpdateSelection(int* selected, uint8_t num_items, uint8_t findex, int count);
 
 
-char a[14] = "UV On";
-char b[14] = "UV Off";
-char c[14] = "Set Time";
-char d[14] = "UV Brightness";
-char e[14] = "Motor Speed";
-char f[14] = "Useless";
-char *Button_List[6] = {a,b,c,d,e,f};
+/*Exported Functions*************************************/
 
-struct Page_details {
-  int options_os;
-  int options_tot;
-  int selected[MAX_MENU_SIZE];
-  int first_index;
-};
-
-void init_OLED() {
+/**
+ * @brief Initialisation function for OLED Screen
+*/
+void OLED_Init() 
+{
   u8g2.begin();
   u8g2.setFlipMode(1);
 }
 
-Page_details get_selection(Page_details menu) {
-  int select = 0;
-  if (KnobCounter <= first_index){ 
-    select = 0;
-  } else if (KnobCounter >= menu.options_tot-1){
-    select = menu.options_os-1;
-  } else {
-    select = KnobCounter-first_index;
-  }
-  for(int i = 0; i < menu.options_os; i++){
-    if (i == select) {
-      menu.selected[i] = U8G2_BTN_INV;
-    } else {
-      menu.selected[i] = U8G2_BTN_BW1;
-    }
-  }
-  return menu;
-}
-
-void set_KnobCounter_range(int low, int high){
-  if (KnobCounter <= low){ 
-    KnobCounter = low;
-  } else if (KnobCounter >= high){
-    KnobCounter = high;
-  }
-}
-
-void set_status_message(){
-  if(PIND & (1<<PD5)){
-    for(int i = 0; i<=13; i++){
-      status_message[i] = LED_ON[i];
-    }
-  } else {
-    for(int i = 0; i<=10; i++){
-      status_message[i] = LED_OFF[i];
-    }
-  }
-}
-
-void set_first_index(int screen, int options){
-  if(KnobCounter < first_index && first_index>0){
-    first_index--;
-  } else if(KnobCounter >= screen+first_index && (first_index+screen)<(options)){
-    first_index++;
-  }
-} 
-
-void update_OLED(int menu_state) {
-  if (millis()-last_update > 100){
-
-    last_update = millis();
-    set_status_message();
-    Page_details menu;
-    menu.options_os = 0;
-    menu.options_tot = 0;
-    char char_KnobCounter[5];
-
-    switch(menu_state) {
-      case 0:
-        menu.options_os = 3;
-        menu.options_tot = 6;
-        set_first_index(menu.options_os, menu.options_tot);
-        set_KnobCounter_range(0,menu.options_tot-1);
-        menu = get_selection(menu);
-      case 1:
-        menu.options_os = 0;
-        menu.options_tot = 0;
-        set_KnobCounter_range(0,MAX_ON_TIME_S);
-    }
+void OLED_Update(MenuHandle_t* hmenu) 
+{
+  if (TimeElapsed_ms(&OLED_UpdateTimeout) > 100)
+  {
+    UpdateTime(&OLED_UpdateTimeout);
     
-    sprintf(char_KnobCounter, "%d", KnobCounter);
-    
-    
-    switch(menu_state) {
-    case 0:
+
+    void* pagehandle_ptr = hmenu->page[hmenu->state].pagehandle;
+    PageType_t pagetype = hmenu->page[hmenu->state].pagetype;
+
+    switch(pagetype) 
+    {
+    case PT_MENU_SCROLL:
+      ScrollMenuHandle_t* hmenu_scroll;
+      hmenu_scroll = (ScrollMenuHandle_t*)pagehandle_ptr;
+      static uint8_t firstIndex = 0; 
+      int selected[MAX_BUTTONS_ON_SCREEN];
+
+      SetFirstIndex(&firstIndex, hmenu_scroll->num_items, KnobCounter);
+      UpdateSelection(selected, hmenu_scroll->num_items, firstIndex, KnobCounter);
+
+
       u8g2.firstPage();
       do {
         //Heading
         u8g2.setFont(u8g2_font_courR10_tf);
-        u8g2.drawStr(0,15,status_message);
+        u8g2.drawStr(0,15,hmenu_scroll->header);
         u8g2.drawBox(0,16,u8g2.getDisplayWidth(), 2);
 
         //Menu Options
         u8g2.setFont(u8g2_font_courR10_tf);
-        u8g2.drawButtonUTF8(5, 28, menu.selected[0], u8g2.getDisplayWidth()-5*2,  5,  1, Button_List[first_index] );
-        u8g2.drawButtonUTF8(5, 43, menu.selected[1], u8g2.getDisplayWidth()-5*2,  5,  1, Button_List[first_index+1] );
-        u8g2.drawButtonUTF8(5, 58, menu.selected[2], u8g2.getDisplayWidth()-5*2,  5,  1, Button_List[first_index+2] );
+        u8g2.drawButtonUTF8(5, 28, selected[0], u8g2.getDisplayWidth()-5*2,  5,  1, hmenu_scroll->itemlist[firstIndex].name );
+        u8g2.drawButtonUTF8(5, 43, selected[1], u8g2.getDisplayWidth()-5*2,  5,  1, hmenu_scroll->itemlist[firstIndex+1].name );
+        u8g2.drawButtonUTF8(5, 58, selected[2], u8g2.getDisplayWidth()-5*2,  5,  1, hmenu_scroll->itemlist[firstIndex+2].name );
       } while ( u8g2.nextPage() );
+
       break;
-    case 1:
+
+
+    case PT_SETTING_DECIMAL_RANGE_ADJUST:
+      SettingDecimalHandle_t* hopt_dec;
+      hopt_dec = (SettingDecimalHandle_t*)pagehandle_ptr;
+      sprintf(KnobCounter_str, "%d%s", KnobCounter, hopt_dec->unittxt);
+
+
       u8g2.firstPage();
       do {
       //Heading
       u8g2.setFont(u8g2_font_courR10_tf);
-      u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth("Exposure Time"))/2),15,"Exposure Time");
+      u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth(hopt_dec->header))/2),15,hopt_dec->header);
       u8g2.drawBox(0,16,u8g2.getDisplayWidth(), 2);
       
       //Time KnobCounter
-      u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth(char_KnobCounter))/2),40,char_KnobCounter);
+      u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth(KnobCounter_str))/2),40,KnobCounter_str);
 
-      u8g2.drawButtonUTF8((u8g2.getDisplayWidth()-u8g2.getStrWidth("OK"))/2, 60, U8G2_BTN_INV, 25,  25,  1, "OK" );
+      u8g2.drawButtonUTF8((u8g2.getDisplayWidth()-u8g2.getStrWidth(hopt_dec->buttontxt))/2, 60, U8G2_BTN_INV, 25,  25,  1, hopt_dec->buttontxt );
       } while ( u8g2.nextPage() );
+      
       break;
-    case 2:
-      u8g2.firstPage();
-      do {
-      //Heading
-      u8g2.setFont(u8g2_font_courR10_tf);
-      u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth("UV Brightness"))/2),15,"UV Brightness");
-      u8g2.drawBox(0,16,u8g2.getDisplayWidth(), 2);
-      
-      //Time KnobCounter
-      u8g2.drawStr(((u8g2.getDisplayWidth()-u8g2.getStrWidth(char_KnobCounter))/2),40,char_KnobCounter);
 
-      u8g2.drawButtonUTF8((u8g2.getDisplayWidth()-u8g2.getStrWidth("OK"))/2, 60, U8G2_BTN_INV, 25,  25,  1, "OK" );
-      } while ( u8g2.nextPage() );
+
+    case PT_RUNTIME_STATS:
+    case PT_SETTING_OPTION_SELECT:
+    default:
+      //intentional Fallthrough. Not Implemented
       break;
     }
   }  
 }
+
+/*Private Functions*****************************************************/
+
+void UpdateSelection(int* selected, uint8_t num_items, uint8_t findex, int count) 
+{
+  int select = 0;
+  if (count <= findex){ 
+    select = 0;
+  } else if (count >= (findex + MAX_BUTTONS_ON_SCREEN-1)){
+    select = MAX_BUTTONS_ON_SCREEN-1;
+  } else {
+    select = count-findex;
+  }
+  for(int i = 0; i < MAX_BUTTONS_ON_SCREEN; i++){
+    if (i == select) {
+      selected[i] = U8G2_BTN_INV;
+    } else {
+      selected[i] = U8G2_BTN_BW1;
+    }
+  }
+}
+
+void SetFirstIndex(uint8_t* findex, int num_items, int count)
+{
+  do
+  {
+    if(count < *findex && *findex>0)
+    {
+      *findex--;
+    } 
+    else if((count > (MAX_BUTTONS_ON_SCREEN-1 + *findex)) && ((*findex + MAX_BUTTONS_ON_SCREEN)<(num_items)))
+    {
+      *findex++;
+    }
+  } while ((count > (MAX_BUTTONS_ON_SCREEN-1 + *findex)) || (count < *findex));
+  
+} 

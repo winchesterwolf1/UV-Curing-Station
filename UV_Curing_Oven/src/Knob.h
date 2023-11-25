@@ -13,6 +13,7 @@
 
 void KNOB_Init(void);
 bool KNOB_PollButtonRelease(void);
+void KNOB_SetCounterRange(int low, int high);
 
 
 
