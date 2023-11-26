@@ -8,6 +8,7 @@
 #define PWM_H
 
 #include "Definitions.h"
+#include "AVR_PWM.h"
 
 /*Exported Defines**********************************/
 /*Exported Macros***********************************/

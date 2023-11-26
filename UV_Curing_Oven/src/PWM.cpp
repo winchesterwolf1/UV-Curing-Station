@@ -7,12 +7,25 @@
 
 #include "PWM.h"
 
+AVR_PWM* PWM_Instance;
+
+uint8_t PWM_Pins = 3;
+float freq = 250;
+float dutyCycle = 15;
+
+
+
 /**
  * @brief Initialise the PWM pins
 */
 void PWM_Init(void)
 {
+    PWM_Instance = new AVR_PWM(PWM_Pins, freq, dutyCycle);
 
+    if (PWM_Instance)
+    {
+    PWM_Instance->setPWM();
+    }
 }
 
 /**
