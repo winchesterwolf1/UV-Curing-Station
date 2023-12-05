@@ -19,8 +19,8 @@
 /*Global Variables******************************************/
 char KnobCounter_str[10];
 TimerTime_t OLED_UpdateTimeout = 0;
-/* OLED Constructor */
-U8G2_SH1106_128X64_NONAME_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ 13, /* data=*/ 11, /* cs=*/ 10, /* dc=*/ 9, /* reset=*/ 8);
+/* OLED Constructor */ 
+U8G2_SH1106_128X64_NONAME_1_4W_SW_SPI u8g2(U8G2_R0, OLED_CLK, OLED_MOSI, OLED_CS, OLED_DC, OLED_RST);
 
 extern int KnobCounter;
 

@@ -16,6 +16,6 @@
 /*Exported Function Prototypes**********************/
 
 void PWM_Init(void);
-void PWM_Update(uint8_t pin, uint8_t duty);
+void PWM_Update(uint8_t pin, float duty);
 
 #endif /* PWM_H */

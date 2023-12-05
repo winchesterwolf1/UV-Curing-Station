@@ -10,7 +10,7 @@
 
 /*Private Defines************************************/
 
-#define COUNTER_MAX 100
+#define COUNTER_MAX 1000
 #define COUNTER_MIN 0
 
 
@@ -31,7 +31,7 @@ bool DebounceButton(bool old_state, uint8_t pin);
 void UpdateEncoderCallback(void);
 
 
-/*Callback Functions*****************************/
+/*Callback Functions*********************************/
 
 ISR (PCINT1_vect)
 {

@@ -7,20 +7,28 @@
 
 #include "PWM.h"
 
+/*Private Defines************************************/
+
+#define PWM_FREQ ((float)250) //Hz
+
+
+/*Private Macros*************************************/
+/*Private Typedef************************************/
+/*Global Variables***********************************/
+
 AVR_PWM* PWM_Instance;
 
-uint8_t PWM_Pins = 3;
-float freq = 250;
-float dutyCycle = 15;
 
-
+/*Private Function Prototypes************************/
+/*Callback Functions*********************************/
+/*Exported Functions*********************************/
 
 /**
  * @brief Initialise the PWM pins
 */
 void PWM_Init(void)
 {
-    PWM_Instance = new AVR_PWM(PWM_Pins, freq, dutyCycle);
+    PWM_Instance = new AVR_PWM(PWM_MOTOR_PIN, PWM_FREQ, 0);
 
     if (PWM_Instance)
     {
@@ -34,7 +42,10 @@ void PWM_Init(void)
  * @param pin Pin to change duty cycle of
  * @param duty new dutycycle of pin
 */
-void PWM_Update(uint8_t pin, uint8_t duty)
+void PWM_Update(uint8_t pin, float duty)
 {
-
+    PWM_Instance->setPWM(pin, PWM_FREQ, duty);
 }
+
+
+/*Private Functions**********************************/

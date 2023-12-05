@@ -7,7 +7,7 @@
 #ifndef OLED_H // include guard
 #define OLED_H
 
-#include "Menu.h"
+#include "OLED_Menu.h"
 #include "Definitions.h"
 
 /*Exported Defines**********************************/

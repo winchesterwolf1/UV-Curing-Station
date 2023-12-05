@@ -5,7 +5,7 @@
  */
 
 #include "Definitions.h"
-#include "Menu.h"
+#include "OLED_Menu.h"
 #include "Knob.h"
 #include "OLED.h"
 #include "PWM.h"
@@ -15,6 +15,10 @@
 
 /*Private Defines************************************/
 /*Private Macros*************************************/
+
+#define _CONVERT_TO_DUTY(spd) ((float)(spd * 3))
+
+
 /*Private Typedef************************************/
 /*Global Variables***********************************/
 
@@ -37,6 +41,7 @@ TimerTime_t UVLED_OnTimer = 0;
 void MENU_Main_UVOnCallback(int arg)
 {
     digitalWrite(UVLED_SW_PIN, HIGH);
+    PWM_Update(PWM_MOTOR_PIN, _CONVERT_TO_DUTY(ApplicationSetings.motor_speed));
     TIM_UpdateTime(&UVLED_OnTimer);
 }
 
@@ -102,6 +107,7 @@ void setup(void)
   MENU_Init(&hmenu1);
   Serial.begin(9600);
   Serial.write("Starting!\r\n");
+  tone(SPEAKER_PIN,2000,1000);
 }
 
 /**
@@ -115,6 +121,7 @@ void loop(void)
   {
     MENU_ServiceSelected(&hmenu1, KnobCounter);
     MENU_SetMainStatusMessage(&hmenu1);
+    tone(SPEAKER_PIN,1750,30);
     updateScreen = true;
   }
   
@@ -122,6 +129,7 @@ void loop(void)
   if((TIM_TimeElapsed_s(&UVLED_OnTimer) >= ApplicationSetings.on_time) && (digitalRead(UVLED_SW_PIN) == HIGH))
   {
     digitalWrite(UVLED_SW_PIN, LOW);
+    PWM_Update(PWM_MOTOR_PIN, 0);
     updateScreen = true;
     MENU_SetMainStatusMessage(&hmenu1);
   }

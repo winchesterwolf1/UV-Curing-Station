@@ -4,7 +4,7 @@
  ***************************************************
  */
 
-#include "Menu.h"
+#include "OLED_Menu.h"
 #include "Definitions.h"
 #include "Knob.h"
 #include "Main.h"
@@ -75,10 +75,10 @@ RuntimePageHandle_t Menu_Runtime = {
 
 /*-------- Menu Structure Handle --------*/
 MenuPageListHandle_t MenuHandleItems[NUM_PAGES] = {
-    { .pagetype = PT_MENU_SCROLL,                   .pagehandle = &Menu_Main,       .range = { .low = 0, .high = MAIN_MENU_ITEMS-1 }},
-    { .pagetype = PT_SETTING_DECIMAL_RANGE_ADJUST,  .pagehandle = &Menu_TimeSelect, .range = { .low = 1, .high = 60 }               },
-    { .pagetype = PT_SETTING_DECIMAL_RANGE_ADJUST,  .pagehandle = &Menu_MotorSpeed, .range = { .low = 1, .high = 30 }               },
-    { .pagetype = PT_RUNTIME_STATS,                 .pagehandle = &Menu_Runtime,    .range = { .low = 1, .high = 100 }              }
+    { .pagetype = PT_MENU_SCROLL,                   .pagehandle = &Menu_Main,       .range = { .low = 0, .high = MAIN_MENU_ITEMS-1 }        },
+    { .pagetype = PT_SETTING_DECIMAL_RANGE_ADJUST,  .pagehandle = &Menu_TimeSelect, .range = { .low = 1, .high = MAX_ON_TIME_S }            },
+    { .pagetype = PT_SETTING_DECIMAL_RANGE_ADJUST,  .pagehandle = &Menu_MotorSpeed, .range = { .low = MIN_MOTOR_SPD, .high = MAX_MOTOR_SPD }},
+    { .pagetype = PT_RUNTIME_STATS,                 .pagehandle = &Menu_Runtime,    .range = { .low = 1, .high = 100 }                      }
 };
 
 MenuHandle_t hmenu1 = { .p_index = PI_MAIN, .page = MenuHandleItems };
